@@ -43,28 +43,37 @@ let
   usergroup = paramStr(1)
 const
   zero: cint = cast[cint](0)
-echo uid
+echo "46: " & $uid
 if usergroup.contains(":"):
   let splitusergroup = usergroup.split(':')
   user  = splitusergroup[0]
   group = splitusergroup[1]
   try:
     uid = user.parseUInt().Uid
+    echo "53: " & $uid
   except ValueError:
+    echo "54"
     pw = getpwnam(user)
+elif not usergroup.contains(":"):
+  try:
+    uid = usergroup.parseUInt().Uid
+    echo "60: " & $uid
+  except ValueError:
+    echo "62"
+    pw = getpwnam(usergroup)
 else:
   user = usergroup
 echo "36: " & repr(pw)
 if pw.isNil:
   echo "pw is nil @ 38"
   pw = getpwuid(uid)
-if pw != nil:
+if not pw.isNil:
   uid = pw.pw_uid
   gid = pw.pw_gid
 "HOME".putEnv($pw.pw_dir)
 echo "43: " & repr(pw)
-echo "uid: " & repr(uid)
-echo "gid: " & repr(gid)
+echo "66. uid: " & repr(uid)
+echo "67. gid: " & repr(gid)
 if group != "":
   pw = nil
   try:
