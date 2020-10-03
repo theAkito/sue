@@ -77,7 +77,7 @@ if group != "":
   except ValueError:
     gr = getgrnam(group)
     if gr.isNil:
-      discard # exit
+      exceptPOSIX("""Error occured with proc "getgrnam".""")
     else:
       gid = gr.gr_gid
 
