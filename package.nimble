@@ -2,10 +2,10 @@
 
 version       = "0.1.0"
 author        = "Akito <the@akito.ooo"
-description   = "A new awesome nimble package"
+description   = "A new awesome nimble sue"
 license       = "GPL-3.0-or-later"
 srcDir        = "src"
-bin           = @["package"]
+bin           = @["sue"]
 skipDirs      = @["tasks"]
 skipFiles     = @["README.md"]
 skipExt       = @["nim"]

@@ -17,4 +17,5 @@ nimcache/
 nimblecache/
 htmldocs/
 # Binaries and Temp Files
-package
+sue
+test*
