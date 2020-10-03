@@ -21,6 +21,9 @@ from strutils import
   contains,
   parseUInt
 
+type
+  POSIX_Exception = object of OSError
+
 if paramCount() < 3: discard # exit
 
 proc getgrouplist(user: cstring, group: Gid, groups: ptr array[0..255, Gid], ngroups: ptr cint): cint {.importc, header: "<grp.h>", sideEffect.}
@@ -43,37 +46,27 @@ let
   usergroup = paramStr(1)
 const
   zero: cint = cast[cint](0)
-echo "46: " & $uid
 if usergroup.contains(":"):
   let splitusergroup = usergroup.split(':')
   user  = splitusergroup[0]
   group = splitusergroup[1]
   try:
     uid = user.parseUInt().Uid
-    echo "53: " & $uid
   except ValueError:
-    echo "54"
     pw = getpwnam(user)
 elif not usergroup.contains(":"):
   try:
     uid = usergroup.parseUInt().Uid
-    echo "60: " & $uid
   except ValueError:
-    echo "62"
     pw = getpwnam(usergroup)
-else:
-  user = usergroup
-echo "36: " & repr(pw)
-if pw.isNil:
-  echo "pw is nil @ 38"
-  pw = getpwuid(uid)
+    if pw.isNil:
+      raise POSIX_Exception.newException("""Invalid username provided.""")
 if not pw.isNil:
   uid = pw.pw_uid
   gid = pw.pw_gid
-"HOME".putEnv($pw.pw_dir)
-echo "43: " & repr(pw)
-echo "66. uid: " & repr(uid)
-echo "67. gid: " & repr(gid)
+  "HOME".putEnv($pw.pw_dir)
+else:
+  "HOME".putEnv("/")
 if group != "":
   pw = nil
   try:
@@ -84,31 +77,21 @@ if group != "":
       discard # exit
     else:
       gid = gr.gr_gid
-echo "56: " & repr(gid)
-echo "57: " & repr(uid)
 glist = cast[ptr array[0..255, Gid]](@[gid])
-# echo "glist: " & repr(glist)
-echo "60: " & repr(pw)
-if pw.isNil:
-  echo 61
-  discard # exit
+if pw.isNil: discard
 elif pw.isNil and setgroups(1.cint, glist) < zero:
-  echo "89: exit"
+  raise POSIX_Exception.newException("""Error occured with proc "setgroups".""")
 else:
   ngroups = 0
   var glist: ptr array[0..255, Gid] = nil
   while true:
     try:
       r = getgrouplist(pw.pw_name, gid, glist, addr(ngroups))
-      echo "94"
     except:
-      echo "skipped"
-      # continue
-    if r >= 0:
-      echo "99"
-      break # exit
+      raise POSIX_Exception.newException("""Error occured with proc "getgrouplist".""")
+    if r >= 0: break
     elif r >= 0 and setgroups(ngroups, glist) < zero:
-      raise Exception.newException("setgroups failed")
+      raise POSIX_Exception.newException("""Error occured with proc "setgroups".""")
     else:
       glist = cast[ptr array[0..255, Gid]](realloc(glist, ngroups * sizeof(Gid)))
       if glist.isNil: echo "100: fail" # exit
@@ -116,4 +99,4 @@ if setgid(gid) < zero: echo "fail" # exit
 if setuid(uid) < zero: echo "fail" # exit
 echo execvp(ccmd[0], ccmd)
 ccmd.deallocCStringArray
-raise Exception.newException("Failed to \"exec\" " & $cmd)
+raise POSIX_Exception.newException("Failed to \"exec\" " & $cmd)
