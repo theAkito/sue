@@ -37,8 +37,8 @@ var
   group: string
   ptrPasswd: ptr Passwd
   ptrGroup: ptr Group
+  ptrGidArray: ptr array[0..255, Gid]
   groupamount: cint
-  grouplist: ptr array[0..255, Gid]
   matchedgroups: cint
 cmd.delete(0)
 let
@@ -81,24 +81,24 @@ if group != "":
     else:
       gid = ptrGroup.gr_gid
 
-grouplist = cast[ptr array[0..255, Gid]](@[gid])
+ptrGidArray = cast[ptr array[0..255, Gid]](@[gid])
 if ptrPasswd.isNil: discard
-elif ptrPasswd.isNil and setgroups(1.cint, grouplist) < zero:
+elif ptrPasswd.isNil and setgroups(1.cint, ptrGidArray) < zero:
   exceptPOSIX("""Error occured with proc "setgroups".""")
 else:
   groupamount = 0
-  grouplist = nil
+  ptrGidArray = nil
   while true:
     try:
-      matchedgroups = getgrouplist(ptrPasswd.pw_name, gid, grouplist, addr(groupamount))
+      matchedgroups = getgrouplist(ptrPasswd.pw_name, gid, ptrGidArray, addr(groupamount))
     except:
       exceptPOSIX("""Error occured with proc "getgrouplist".""")
     if matchedgroups >= 0: break
-    elif matchedgroups >= 0 and setgroups(groupamount, grouplist) < zero:
+    elif matchedgroups >= 0 and setgroups(groupamount, ptrGidArray) < zero:
       exceptPOSIX("""Error occured with proc "setgroups".""")
     else:
-      grouplist = cast[ptr array[0..255, Gid]](realloc(grouplist, groupamount * sizeof(Gid)))
-      if grouplist.isNil:
+      ptrGidArray = cast[ptr array[0..255, Gid]](realloc(ptrGidArray, groupamount * sizeof(Gid)))
+      if ptrGidArray.isNil:
         exceptPOSIX("List of groups may not be empty.")
 
 if setgid(gid) < zero: exceptPOSIX("""Error occured with proc "setgid".""")
