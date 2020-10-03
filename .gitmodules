@@ -1,0 +1,3 @@
+[submodule "tasks"]
+	path = tasks
+	url = git@github.com:theAkito/nim-tools.git
