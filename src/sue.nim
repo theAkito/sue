@@ -1,26 +1,35 @@
-import
-  posix,
-  os,
-  osproc,
-  strutils
-
-from sequtils import
-  delete
+from posix import
+  getuid,
+  getgid,
+  setuid,
+  setgid,
+  getpwnam,
+  getpwuid,
+  getgrnam,
+  execvp,
+  Uid,
+  Gid,
+  Passwd,
+  Group
+from os import
+  commandLineParams,
+  paramStr,
+  paramCount,
+  putEnv
+from strutils import
+  split,
+  contains,
+  parseUInt
 
 if paramCount() < 3: discard # exit
 
-# proc getgrouplist(user: cstring, group: Gid, groups: ptr array[0..255, Gid], ngroups: ptr cint): cint {.importc, header: "<grp.h>", sideEffect.}
-proc getgrouplist(user: cstring, group: Gid, groups: ptr Gid, ngroups: ptr cint): cint {.importc, header: "<grp.h>", sideEffect.}
-# proc setgroups(size: cint, list: ptr array[0..255, Gid]): cint {.importc, header: "<grp.h>", sideEffect.}
-proc setgroups(size: cint, list: ptr Gid): cint {.importc, header: "<grp.h>", sideEffect.}
-
-proc execvp(a1: cstring, a2: cstring): cint {.importc, header: "<unistd.h>", sideEffect.}
+proc getgrouplist(user: cstring, group: Gid, groups: ptr array[0..255, Gid], ngroups: ptr cint): cint {.importc, header: "<grp.h>", sideEffect.}
+proc setgroups(size: cint, list: ptr array[0..255, Gid]): cint {.importc, header: "<grp.h>", sideEffect.}
 
 var
   cmd = commandLineParams()
   uid = getuid()
   gid = getgid()
-  usergroup = paramStr(1)
   user: string
   group: string
   pw: ptr Passwd
@@ -28,18 +37,23 @@ var
   ngroups: cint
   glist: ptr array[0..255, Gid]
   r: cint
-  zero: cint = cast[cint](0)
 cmd.delete(0)
 let
   ccmd = cmd.allocCStringArray()
+  usergroup = paramStr(1)
+const
+  zero: cint = cast[cint](0)
 echo uid
 if usergroup.contains(":"):
-  user = usergroup.split(':')[0]
-  group = usergroup.split(':')[1]
+  let splitusergroup = usergroup.split(':')
+  user  = splitusergroup[0]
+  group = splitusergroup[1]
   try:
     uid = user.parseUInt().Uid
   except ValueError:
     pw = getpwnam(user)
+else:
+  user = usergroup
 echo "36: " & repr(pw)
 if pw.isNil:
   echo "pw is nil @ 38"
@@ -63,25 +77,34 @@ if group != "":
       gid = gr.gr_gid
 echo "56: " & repr(gid)
 echo "57: " & repr(uid)
-# glist = cast[ptr array[0..255, Gid]](gid)
-# glist = addr(gid)
-# echo repr(glist[0])
-# echo "60: " & repr(pw)
-# if pw.isNil and setgroups(1.cint, addr(gid)) < zero:
-#   echo 61
-#   discard # exit
-# else:
-#   ngroups = 0
-#   let glist: ptr Gid = nil
-#   while true:
-#     try:
-#       r = getgrouplist(pw.pw_name, gid, glist, addr(ngroups))
-#     except:
-#       continue
-#     if r >= 0 and setgroups(ngroups, glist) < zero:
-#       discard # exit
-#     else: break
-# if glist.isNil: echo "79: fail" # exit
+glist = cast[ptr array[0..255, Gid]](@[gid])
+# echo "glist: " & repr(glist)
+echo "60: " & repr(pw)
+if pw.isNil:
+  echo 61
+  discard # exit
+elif pw.isNil and setgroups(1.cint, glist) < zero:
+  echo "89: exit"
+else:
+  ngroups = 0
+  var glist: ptr array[0..255, Gid] = nil
+  while true:
+    try:
+      r = getgrouplist(pw.pw_name, gid, glist, addr(ngroups))
+      echo "94"
+    except:
+      echo "skipped"
+      # continue
+    if r >= 0:
+      echo "99"
+      break # exit
+    elif r >= 0 and setgroups(ngroups, glist) < zero:
+      raise Exception.newException("setgroups failed")
+    else:
+      glist = cast[ptr array[0..255, Gid]](realloc(glist, ngroups * sizeof(Gid)))
+      if glist.isNil: echo "100: fail" # exit
 if setgid(gid) < zero: echo "fail" # exit
 if setuid(uid) < zero: echo "fail" # exit
 echo execvp(ccmd[0], ccmd)
+ccmd.deallocCStringArray
+raise Exception.newException("Failed to \"exec\" " & $cmd)
