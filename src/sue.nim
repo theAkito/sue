@@ -30,13 +30,13 @@ proc setgroups(size: cint, list: ptr array[0..255, Gid]): cint {.importc, header
 if paramCount() < 2: usage(); raise Exception.newException("""Invalid number of arguments.""")
 
 var
-  cmd = commandLineParams()
-  uid = getuid()
-  gid = getgid()
+  cmd: seq[TaintedString] = commandLineParams()
+  uid: Uid = getuid()
+  gid: Gid = getgid()
   user: string
   group: string
-  pw: ptr Passwd
-  gr: ptr Group
+  ptrPasswd: ptr Passwd
+  ptrGroup: ptr Group
   groupamount: cint
   grouplist: ptr array[0..255, Gid]
   matchedgroups: cint
@@ -54,43 +54,43 @@ if usergroup.contains(":"):
   try:
     uid = user.parseUInt().Uid
   except ValueError:
-    pw = getpwnam(user)
+    ptrPasswd = getpwnam(user)
 elif not usergroup.contains(":"):
   try:
     uid = usergroup.parseUInt().Uid
   except ValueError:
-    pw = getpwnam(usergroup)
-    if pw.isNil:
+    ptrPasswd = getpwnam(usergroup)
+    if ptrPasswd.isNil:
       exceptPOSIX("""Invalid username provided.""")
 
-if not pw.isNil:
-  uid = pw.pw_uid
-  gid = pw.pw_gid
-  "HOME".putEnv($pw.pw_dir)
+if not ptrPasswd.isNil:
+  uid = ptrPasswd.pw_uid
+  gid = ptrPasswd.pw_gid
+  "HOME".putEnv($ptrPasswd.pw_dir)
 else:
   "HOME".putEnv("/")
 
 if group != "":
-  pw = nil
+  ptrPasswd = nil
   try:
     gid = group.parseUInt().Uid
   except ValueError:
-    gr = getgrnam(group)
-    if gr.isNil:
+    ptrGroup = getgrnam(group)
+    if ptrGroup.isNil:
       exceptPOSIX("""Error occured with proc "getgrnam".""")
     else:
-      gid = gr.gr_gid
+      gid = ptrGroup.gr_gid
 
 grouplist = cast[ptr array[0..255, Gid]](@[gid])
-if pw.isNil: discard
-elif pw.isNil and setgroups(1.cint, grouplist) < zero:
+if ptrPasswd.isNil: discard
+elif ptrPasswd.isNil and setgroups(1.cint, grouplist) < zero:
   exceptPOSIX("""Error occured with proc "setgroups".""")
 else:
   groupamount = 0
   grouplist = nil
   while true:
     try:
-      matchedgroups = getgrouplist(pw.pw_name, gid, grouplist, addr(groupamount))
+      matchedgroups = getgrouplist(ptrPasswd.pw_name, gid, grouplist, addr(groupamount))
     except:
       exceptPOSIX("""Error occured with proc "getgrouplist".""")
     if matchedgroups >= 0: break
