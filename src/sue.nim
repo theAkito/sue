@@ -126,4 +126,4 @@ echo execvp(ccmd[0], ccmd)
 ccmd.deallocCStringArray
 ## If the `exec` above failed, this program will continue, which it should not.
 ## Therefore, an exception is thrown, as the wished for `exec` failed.
-exceptPOSIX("""Failed to "exec" """" & $cmd & """"""")
+exceptPOSIX("""Failed to `exec` """" & $cmd & """"""")
