@@ -13,7 +13,7 @@ skipExt       = @["nim"]
 
 # Dependencies
 
-requires "nim >= 1.0.6"
+requires "nim >= 1.2.6"
 
 
 # Tasks
@@ -24,10 +24,22 @@ task configure, "Configure project.":
   exec "git fetch"
   exec "git pull"
   exec "git checkout master"
+  exec "git submodule add git@github.com:theAkito/nim-tools.git tasks"
   exec "git submodule update --init --recursive"
   exec "git submodule update --recursive --remote"
-task build, "Build project.":
-  setCommand "c"
+task fbuild, "Build project.":
+  exec """nim c \
+            --define:danger \
+            --opt:size \
+            --out:sue \
+            src/sue
+       """
+task dbuild, "Debug Build project.":
+  exec """nim c \
+            --out:sue \
+            --debuginfo:on \
+            src/sue
+       """
 task makecfg, "Create nim.cfg for optimized builds.":
   exec "nim utils/cfg_optimized.nims"
 task clean, "Removes nim.cfg.":

@@ -101,8 +101,8 @@ else:
       if ptrGidArray.isNil:
         exceptPOSIX("List of groups may not be empty.")
 
-if setgid(gid) < zero: exceptPOSIX("""Error occured with proc "setgid".""")
-if setuid(uid) < zero: exceptPOSIX("""Error occured with proc "setuid".""")
+if setgid(gid) < zero: exceptPOSIX("""Error occured with proc "setgid". Did you run me as the "root" user?""")
+if setuid(uid) < zero: exceptPOSIX("""Error occured with proc "setuid". Did you run me as the "root" user?""")
 echo execvp(ccmd[0], ccmd)
 ccmd.deallocCStringArray
 exceptPOSIX("""Failed to "exec" """" & $cmd & """"""")
