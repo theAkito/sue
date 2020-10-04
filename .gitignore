@@ -20,3 +20,5 @@ htmldocs/
 # Binaries and Temp Files
 sue
 test*
+!tests
+!test.nims

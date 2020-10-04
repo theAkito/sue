@@ -34,7 +34,12 @@ nimble dbuild
 ```
 for the debug/development build.
 
-The first argument is the *user-spec* with either the username or its `id`. Appending a `group` to the *user-spec* is optional.
+You can also make a quick test if `sue` works, as it should:
+```
+nimble test
+```
+
+The first argument passed to `sue` is the *user-spec* with either the username or its `id`. Appending a `group` to the *user-spec* is optional.
 
 The following examples assume a user named *dunwall*, belonging to a group of the same name and `id`.
 
@@ -63,6 +68,7 @@ Confirmed to work on Linux. Probably works on BSD, too.
 Could need some more testing and confirmation, but it works in all cases I tested so far, in a non-production environment. This will be declared stable, once it is confirmed to cover all `gosu` test cases, successfully.
 
 ## TODO
+* ~~Implemente test suite~~
 * Include `gosu` test cases
 * Optimize
 * Better error handling

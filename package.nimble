@@ -19,7 +19,8 @@ requires "nim >= 1.2.6"
 # Tasks
 
 task test, "Run test.":
-  exec "nim cc -r tests/test.nim"
+  "tests/".cd
+  exec "nim test.nims $USER"
 task configure, "Configure project.":
   exec "git fetch"
   exec "git pull"
