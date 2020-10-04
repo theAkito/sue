@@ -45,8 +45,6 @@ cmd.delete(0)
 let
   ccmd = cmd.allocCStringArray()
   usergroup = paramStr(1)
-const
-  zero: cint = 0
 
 proc getUIDorExcept(user: string) =
   try:
@@ -92,7 +90,7 @@ if group != "":
       gid = ptrGroup.gr_gid
 
 ptrGidArray = cast[ptr array[0..255, Gid]](@[gid])
-if ptrPasswd.isNil and setgroups(1.cint, ptrGidArray) < zero:
+if ptrPasswd.isNil and setgroups(1, ptrGidArray) < 0:
   ## Error out, if group is either not provided or not retrievable.
   exceptPOSIX("""Error occured with proc "setgroups".""")
 elif not ptrPasswd.isNil:
@@ -107,7 +105,7 @@ elif not ptrPasswd.isNil:
     except:
       exceptPOSIX("""Error occured with proc "getgrouplist".""")
     if matchedgroups >= 0: break
-    elif matchedgroups >= 0 and setgroups(groupamount, ptrGidArray) < zero:
+    elif matchedgroups >= 0 and setgroups(groupamount, ptrGidArray) < 0:
       ## Sets `matchedgroups`, i.e. the list of retrieved GIDs, for this process.
       ## Errors out, if `setgroups` failed.
       exceptPOSIX("""Error occured with proc "setgroups".""")
@@ -119,8 +117,8 @@ elif not ptrPasswd.isNil:
 
 ## Usually, `setgid`/`setuid` do not work, if not executed as root.
 ## Therefore, reminding the user to avoid the most common mistake.
-if setgid(gid) < zero: exceptPOSIX("""Error occured with proc "setgid". Did you run me as the "root" user?""")
-if setuid(uid) < zero: exceptPOSIX("""Error occured with proc "setuid". Did you run me as the "root" user?""")
+if setgid(gid) < 0: exceptPOSIX("""Error occured with proc "setgid". Did you run me as the "root" user?""")
+if setuid(uid) < 0: exceptPOSIX("""Error occured with proc "setuid". Did you run me as the "root" user?""")
 ## Either `exec`'s provided command line or echoes its error code, usually being "-1".
 echo execvp(ccmd[0], ccmd)
 ccmd.deallocCStringArray
