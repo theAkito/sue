@@ -1,3 +1,5 @@
+[![nimble](https://raw.githubusercontent.com/yglukhov/nimble-tag/master/nimble.png)](https://nimble.directory/pkg/sue)
+
 ![GitHub](https://img.shields.io/badge/license-GPL--3.0-informational?style=plastic)
 ![Liberapay patrons](https://img.shields.io/liberapay/patrons/Akito?style=plastic)
 
@@ -63,6 +65,7 @@ Could need some more testing and confirmation, but it works in all cases I teste
 ## TODO
 * Include `gosu` test cases
 * Optimize
+* Better error handling
 
 ## License
 Copyright (C) 2020  Akito <the@akito.ooo>
