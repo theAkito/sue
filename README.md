@@ -57,7 +57,26 @@ Example 3:
 ```
 
 ## Where
-Confirmed to work on Linux. Probably works on BSD, too.
+This tool is meant to be used in a Docker environment, as a way to execute a program while temporarily switching the user just for running that process, as some need to be run as a specific user or need a designated user for taking over a user role in that program.
+
+### Real world example
+
+The following example is taken from the official `postgres:13-alpine` Docker image's `docker-entrypoint.sh` script, where `su-exec` is used to execute this startup script as the `postgres` user, since PostgreSQL should be operated by the `postgres` user.
+
+```bash
+	if [ "$1" = 'postgres' ] && ! _pg_want_help "$@"; then
+		docker_setup_env
+		# setup data directories and permissions (when run as root)
+		docker_create_db_directories
+		if [ "$(id -u)" = '0' ]; then
+			# then restart script as postgres user
+			exec su-exec postgres "$BASH_SOURCE" "$@"
+		fi
+```
+
+[Source](https://github.com/docker-library/postgres/blob/b80fcb5ac7f6dde712e70d2d53a88bf880700fde/13/docker-entrypoint.sh#L281)
+
+Note that use-cases like this one are the primary target of `sue`. Using this program outside of a Docker container usually means that this tool is misused, as it is specifically designed for the type of purpose shown in the example above.
 
 ## Goals
 * Performance
