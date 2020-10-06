@@ -1,7 +1,9 @@
 [![nimble](https://raw.githubusercontent.com/yglukhov/nimble-tag/master/nimble.png)](https://nimble.directory/pkg/sue)
 
-![GitHub](https://img.shields.io/badge/license-GPL--3.0-informational?style=plastic)
-![Liberapay patrons](https://img.shields.io/liberapay/patrons/Akito?style=plastic)
+[![Language](https://img.shields.io/badge/language-Nim-orange.svg?style=plastic)](https://nim-lang.org/)
+
+[![GitHub](https://img.shields.io/badge/license-GPL--3.0-informational?style=plastic)](https://www.gnu.org/licenses/gpl-3.0.txt)
+[![Liberapay patrons](https://img.shields.io/liberapay/patrons/Akito?style=plastic)](https://liberapay.com/Akito/)
 
 ## What
 Executes a program as a user different from the user running `sue`. The target program is `exec`'ed which means, that it replaces the `sue` process you are using to run the target program. This simulates native tools like `su` and `sudo` and uses the same low-level POSIX tools to achieve that, but eliminates common issues that usually arise, when using those native tools.
@@ -87,7 +89,7 @@ Note that use-cases like this one are the primary target of `sue`. Using this pr
 Could need some more testing and confirmation, but it works in all cases I tested so far, in a non-production environment. This will be declared stable, once it is confirmed to cover all `gosu` test cases, successfully.
 
 ## TODO
-* ~~Implemente test suite~~
+* ~~Implement test suite~~
 * Include `gosu` test cases
 * Optimize
 * Better error handling
