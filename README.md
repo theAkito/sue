@@ -17,6 +17,28 @@ This and its alternatives all exist for pretty much the same core reason:
 
 [Source](https://github.com/tianon/gosu/blob/master/README.md)
 
+### Why use `sue` instead of `su-exec`, `gosu` or other alternatives?
+An opinionated comparison!
+
+**Better than `gosu` in these ways:**
+
+`gosu` is written in Go, which is comparatively slow and bloated compared to other systems programming languages. `sue` is written in [Nim](https://nim-lang.org/), which is comparable to C in terms of performance and size, while being actually maintainable & readable.
+
+**Better than `su-exec` in these ways:**
+
+`su-exec` is supposed to be a far more lightweight alternative to `gosu`. As an example, the official Debian-based `postgres` images use `gosu` while the Alpine-based images use `su-exec`.
+The latter is written in C, meaning that the level of maintainability is kept pretty low. It also is focused entirely on size and less on providing every feature of `gosu` in a more compact fashion. `gosu` has a stricter and much more robust behaviour, than `su-exec`.
+
+`sue` is on the other hand covering all `gosu` test cases, meaning that it provides precisely the same feature set as `gosu` while being only half the size and most likely being also more performant overall.
+
+**Better than `chroot` in these ways:**
+
+`chroot` is a bit clunky and not as straight-forward to use. For the use-case of the specific privilege management in Docker environments, this tool is not well suited, as it has originally a different overall purpose.
+
+**Better than `setpriv` in these ways:**
+
+Similar to `chroot`, `setpriv` feels very clunky and you have to provide so much information explicitly, when it could be so much more straight-forward and easy to use, as is `gosu`, `su-exec` or `sue`.
+
 ## How
 First, make sure you are running `sue` as the `root` user, to avoid permission issues.
 
@@ -97,9 +119,10 @@ All [`gosu` test cases](https://github.com/tianon/gosu/blob/master/Dockerfile.te
 ## TODO
 * ~~Implement test suite~~
 * ~~Include `gosu` test cases~~
+* ~~Better error handling~~
+* Add base Docker image
 * Separate inlined script from Dockerfile
 * Optimize
-* Better error handling
 
 ## License
 Copyright (C) 2020  Akito <the@akito.ooo>
