@@ -21,6 +21,9 @@ from strutils import
   split,
   contains,
   parseUInt
+from regex import
+  match,
+  re
 
 type POSIX_Exception = object of OSError
 proc exceptPOSIX(msg: string) = raise POSIX_Exception.newException(msg)
@@ -31,39 +34,54 @@ proc setgroups(size: cint, list: ptr array[0..255, Gid]): cint {.importc, header
 if paramCount() < 2: usage(); raise Exception.newException("""Invalid number of arguments.""")
 
 var
-  cmd: seq[TaintedString] = commandLineParams()
-  uid: Uid = getuid()
-  gid: Gid = getgid()
-  user: string
-  group: string
-  ptrPasswd: ptr Passwd
-  ptrGroup: ptr Group
-  ptrGidArray: ptr array[0..255, Gid]
-  groupamount: cint
+  cmd          : seq[TaintedString] = commandLineParams()
+  uid          : Uid                = getuid()
+  gid          : Gid                = getgid()
+  user         : string
+  group        : string
+  gidArray     : array[0..255, Gid]
+  ptrPasswd    : ptr Passwd
+  ptrGroup     : ptr Group
+  ptrGidArray  : ptr array[0..255, Gid]
+  groupamount  : cint
   matchedgroups: cint
 cmd.delete(0)
 let
   ccmd = cmd.allocCStringArray()
   usergroup = paramStr(1)
 
-proc getUIDorExcept(user: string) =
+func matchNameRegex(name: string): bool =
+  ## Matches username pattern as defined by `NAME_REGEX`.
+  ## https://serverfault.com/a/578264/405521
+  if name.match(re"^[[:alpha:]][-[:alnum:]]*$"): return true
+  else: return false
+
+proc getPasswdOrExcept(user: string) =
+  ## `ptrPasswd` won't ever be `nil`.
   try:
     uid = user.parseUInt().Uid
+    ptrPasswd = getpwuid(uid)
   except ValueError:
     ## If the user provided is not a numeric UID already,
     ## we will retrieve it.
-    ptrPasswd = getpwnam(user)
-    ## Error out on invalid username.
+    ## If provided UID is empty,
+    ## get UID of the original process executor.
+    if user == "": ptrPasswd = getpwuid(uid)
+    elif user.matchNameRegex:
+      ptrPasswd = getpwnam(user)
+    else:
+      exceptPOSIX("Invalid username provided.")
     if ptrPasswd.isNil:
-      exceptPOSIX("""Invalid username provided.""")
+      exceptPOSIX("Invalid username provided.")
+
 
 if usergroup.contains(":"):
   let splitusergroup = usergroup.split(':')
   user  = splitusergroup[0]
   group = splitusergroup[1]
-  getUIDorExcept(user)
-elif not usergroup.contains(":"):
-  getUIDorExcept(usergroup)
+  getPasswdOrExcept(user)
+else:
+  getPasswdOrExcept(usergroup)
 
 if not ptrPasswd.isNil:
   uid = ptrPasswd.pw_uid
@@ -81,18 +99,23 @@ if group != "":
   except ValueError:
     ## If the group provided is not a numeric GID already,
     ## the `Group` pointer for the provided group is retrieved.
-    ptrGroup = getgrnam(group)
+    if group.matchNameRegex: 
+      ptrGroup = getgrnam(group)
+    else:
+      exceptPOSIX("Invalid groupname provided.")
     if ptrGroup.isNil:
-      exceptPOSIX("""Error occured with proc "getgrnam".""")
+      exceptPOSIX("Invalid groupname provided.")
     else:
       ## The GID from the provided group is retrieved
       ## through the `Group` pointer retrieved above.
       gid = ptrGroup.gr_gid
 
-ptrGidArray = cast[ptr array[0..255, Gid]](@[gid])
-if ptrPasswd.isNil and setgroups(1, ptrGidArray) < 0:
-  ## Error out, if group is either not provided or not retrievable.
-  exceptPOSIX("""Error occured with proc "setgroups".""")
+var tgidArray: array[0..255, Gid]
+tgidArray[0] = gid
+if ptrPasswd.isNil:
+  if setgroups(1, tgidArray.addr) < 0:
+    ## Error out, if group is either not provided or not retrievable.
+    exceptPOSIX("""(1) Error occured with proc "setgroups".""")
 elif not ptrPasswd.isNil:
   ## If `group` wasn't specified, it will be researched.
   groupamount = 0
@@ -101,19 +124,12 @@ elif not ptrPasswd.isNil:
     ## Retrieving amount of matching groups, until we retrieved all.
     ## Will equal `groupamount` at some point, leading to the loop's break.
     try:
-      matchedgroups = getgrouplist(ptrPasswd.pw_name, gid, ptrGidArray, addr(groupamount))
+      matchedgroups = getgrouplist(ptrPasswd.pw_name, gid, gidArray.addr, addr(groupamount))
     except:
       exceptPOSIX("""Error occured with proc "getgrouplist".""")
-    if matchedgroups >= 0: break
-    elif matchedgroups >= 0 and setgroups(groupamount, ptrGidArray) < 0:
-      ## Sets `matchedgroups`, i.e. the list of retrieved GIDs, for this process.
-      ## Errors out, if `setgroups` failed.
-      exceptPOSIX("""Error occured with proc "setgroups".""")
-    else:
-      ## Resizes the list of GIDs, as more are to be retrieved through this loop.
-      ptrGidArray = cast[ptr array[0..255, Gid]](realloc(ptrGidArray, groupamount * sizeof(Gid)))
-      if ptrGidArray.isNil:
-        exceptPOSIX("""List "ptrGidArray" may not be nil.""")
+    if matchedgroups == groupamount:
+      discard setgroups(groupamount, gidArray.addr)
+      break
 
 ## Usually, `setgid`/`setuid` do not work, if not executed as root.
 ## Therefore, reminding the user to avoid the most common mistake.
