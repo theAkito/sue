@@ -90,7 +90,7 @@ Could need some more testing and confirmation, but it works in all cases I teste
 
 ## TODO
 * ~~Implement test suite~~
-* Include `gosu` test cases
+* ~~Include `gosu` test cases~~
 * Optimize
 * Better error handling
 
