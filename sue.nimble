@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.1.0"
+version       = "0.2.0"
 author        = "Akito <the@akito.ooo>"
 description   = "Executes a program as a user different from the user running `sue`. The target program is `exec`'ed which means, that it replaces the `sue` process you are using to run the target program. This simulates native tools like `su` and `sudo` and uses the same low-level POSIX tools to achieve that, but eliminates common issues that usually arise, when using those native tools."
 license       = "GPL-3.0-or-later"
@@ -14,13 +14,26 @@ skipExt       = @["nim"]
 # Dependencies
 
 requires "nim >= 1.2.6"
+requires "regex >= 0.16.2"
 
 
 # Tasks
 
-task test, "Run test.":
+task test, "Run simple test.":
   "tests/".cd
   exec "nim test.nims $USER"
+task xtest, "Run extended test suite. Requires Docker.":
+  exec """nimble dbuild && \
+          docker build \
+            --no-cache \
+            -t sue:test \
+            -f Dockerfile \
+            . && \
+          docker run \
+            --rm \
+            -it \
+            sue:test
+       """
 task configure, "Configure project.":
   exec "git fetch"
   exec "git pull"
