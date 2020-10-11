@@ -40,6 +40,12 @@ You can also make a quick test if `sue` works, as it should:
 ```
 nimble test
 ```
+Run the fully fledged test suite, covering a large amount of edge cases and possible flukes:
+```
+nimble xtest
+```
+This test suite covers all original [`gosu` test cases](https://github.com/tianon/gosu/blob/master/Dockerfile.test-alpine). Since all are passed successfully, we achieve full compatability with `gosu`'s behaviour.
+____
 
 The first argument passed to `sue` is the *user-spec* with either the username or its `id`. Appending a `group` to the *user-spec* is optional.
 
