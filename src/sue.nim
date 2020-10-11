@@ -57,7 +57,16 @@ func matchNameRegex(name: string): bool =
   else: return false
 
 proc getPasswdOrExcept(user: string) =
+  ## Retrieve pointer to `passwd` entry of specified `user`.
+  ## If specified `user` consists of a non-instantiated
+  ## UID, then `ptrPasswd` remains `nil` and all other
+  ## actions related to user management will be skipped,
+  ## resulting in the provided UID to be `setuid`'ed and
+  ## an either provided GID or, if not explicitly provided,
+  ## the GID of the user running `sue`, to be `setgid`'ed.
   if user == "":
+    ## If provided UID is empty,
+    ## get UID of the original process executor.
     ptrPasswd = getpwuid(uid)
     return
   try:
@@ -66,8 +75,6 @@ proc getPasswdOrExcept(user: string) =
   except ValueError:
     ## If the user provided is not a numeric UID already,
     ## we will retrieve it.
-    ## If provided UID is empty,
-    ## get UID of the original process executor.
     if user.matchNameRegex:
       ptrPasswd = getpwnam(user)
     else:
