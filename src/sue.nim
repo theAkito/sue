@@ -34,17 +34,17 @@ proc setgroups(size: cint, list: ptr array[0..255, Gid]): cint {.importc, header
 if paramCount() < 2: usage(); raise Exception.newException("""Invalid number of arguments.""")
 
 var
-  cmd          : seq[TaintedString] = commandLineParams()
-  uid          : Uid                = getuid()
-  gid          : Gid                = getgid()
-  user         : string
-  group        : string
-  gidArray     : array[0..255, Gid]
-  ptrPasswd    : ptr Passwd
-  ptrGroup     : ptr Group
-  ptrGidArray  : ptr array[0..255, Gid]
-  groupamount  : cint
-  matchedgroups: cint
+  cmd           : seq[TaintedString] = commandLineParams()
+  uid           : Uid                = getuid()
+  gid           : Gid                = getgid()
+  user          : string
+  group         : string
+  gidArray      : array[0..255, Gid]
+  singleGidArray: array[0..255, Gid]
+  ptrPasswd     : ptr Passwd
+  ptrGroup      : ptr Group
+  groupamount   : cint
+  matchedgroups : cint
 cmd.delete(0)
 let
   ccmd = cmd.allocCStringArray()
@@ -57,7 +57,6 @@ func matchNameRegex(name: string): bool =
   else: return false
 
 proc getPasswdOrExcept(user: string) =
-  ## `ptrPasswd` won't ever be `nil`.
   try:
     uid = user.parseUInt().Uid
     ptrPasswd = getpwuid(uid)
@@ -110,25 +109,24 @@ if group != "":
       ## through the `Group` pointer retrieved above.
       gid = ptrGroup.gr_gid
 
-var tgidArray: array[0..255, Gid]
-tgidArray[0] = gid
+singleGidArray[0] = gid
 if ptrPasswd.isNil:
-  if setgroups(1, tgidArray.addr) < 0:
+  if setgroups(1, singleGidArray.addr) < 0:
     ## Error out, if group is either not provided or not retrievable.
-    exceptPOSIX("""(1) Error occured with proc "setgroups".""")
+    exceptPOSIX("Cannot set single provided group.")
 elif not ptrPasswd.isNil:
   ## If `group` wasn't specified, it will be researched.
   groupamount = 0
-  ptrGidArray = nil
   while true:
     ## Retrieving amount of matching groups, until we retrieved all.
     ## Will equal `groupamount` at some point, leading to the loop's break.
     try:
-      matchedgroups = getgrouplist(ptrPasswd.pw_name, gid, gidArray.addr, addr(groupamount))
+      matchedgroups = getgrouplist(ptrPasswd.pw_name, gid, gidArray.addr, groupamount.addr)
     except:
       exceptPOSIX("""Error occured with proc "getgrouplist".""")
     if matchedgroups == groupamount:
-      discard setgroups(groupamount, gidArray.addr)
+      if setgroups(groupamount, gidArray.addr) < 0:
+        exceptPOSIX("Cannot set array of discovered groups.")
       break
 
 ## Usually, `setgid`/`setuid` do not work, if not executed as root.
