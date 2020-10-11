@@ -97,6 +97,7 @@ All [`gosu` test cases](https://github.com/tianon/gosu/blob/master/Dockerfile.te
 ## TODO
 * ~~Implement test suite~~
 * ~~Include `gosu` test cases~~
+* Separate inlined script from Dockerfile
 * Optimize
 * Better error handling
 

@@ -11,24 +11,23 @@ RUN nimble fbuild
 FROM alpine:3.12
 
 RUN cut -d: -f1 /etc/group | xargs -n1 addgroup nobody
-
 COPY --from=build /root/sue/sue /usr/local/bin/sue
 
 RUN { \
-		echo '#!/bin/sh'; \
-		echo 'set -x'; \
-		echo; \
-		echo 'spec="$1"; shift'; \
-		echo; \
-		echo 'expec="$1"; shift'; \
-		echo 'real="$(/usr/local/bin/sue "$spec" id -u):$(/usr/local/bin/sue "$spec" id -g):$(/usr/local/bin/sue "$spec" id -G)"'; \
-		echo '[ "$expec" = "$real" ]'; \
-		echo; \
-		echo 'expec="$1"; shift'; \
-		echo 'real="$(/usr/local/bin/sue "$spec" id -un):$(/usr/local/bin/sue "$spec" id -gn):$(/usr/local/bin/sue "$spec" id -Gn)" || true'; \
-		echo '[ "$expec" = "$real" ]'; \
-	} > /usr/local/bin/sue-tester \
-	&& chmod +x /usr/local/bin/sue-tester
+    echo '#!/bin/sh'; \
+    echo 'set -x'; \
+    echo; \
+    echo 'spec="$1"; shift'; \
+    echo; \
+    echo 'expec="$1"; shift'; \
+    echo 'real="$(/usr/local/bin/sue "$spec" id -u):$(/usr/local/bin/sue "$spec" id -g):$(/usr/local/bin/sue "$spec" id -G)"'; \
+    echo '[ "$expec" = "$real" ]'; \
+    echo; \
+    echo 'expec="$1"; shift'; \
+    echo 'real="$(/usr/local/bin/sue "$spec" id -un):$(/usr/local/bin/sue "$spec" id -gn):$(/usr/local/bin/sue "$spec" id -Gn)" || true'; \
+    echo '[ "$expec" = "$real" ]'; \
+  } > /usr/local/bin/sue-tester \
+  && chmod +x /usr/local/bin/sue-tester
 
 RUN chgrp nobody /usr/local/bin/sue
 RUN chmod +s /usr/local/bin/sue
