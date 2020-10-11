@@ -92,7 +92,7 @@ Note that use-cases like this one are the primary target of `sue`. Using this pr
 * Maintainability
 
 ## Project Status
-Could need some more testing and confirmation, but it works in all cases I tested so far, in a non-production environment. This will be declared stable, once it is confirmed to cover all `gosu` test cases, successfully.
+All [`gosu` test cases](https://github.com/tianon/gosu/blob/master/Dockerfile.test-alpine) are covered, achieving full compatability with `gosu`'s behaviour. Therefore, this alternative is just as stable as the widely popular `gosu`.
 
 ## TODO
 * ~~Implement test suite~~
