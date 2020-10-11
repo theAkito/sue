@@ -57,6 +57,9 @@ func matchNameRegex(name: string): bool =
   else: return false
 
 proc getPasswdOrExcept(user: string) =
+  if user == "":
+    ptrPasswd = getpwuid(uid)
+    return
   try:
     uid = user.parseUInt().Uid
     ptrPasswd = getpwuid(uid)
@@ -65,8 +68,7 @@ proc getPasswdOrExcept(user: string) =
     ## we will retrieve it.
     ## If provided UID is empty,
     ## get UID of the original process executor.
-    if user == "": ptrPasswd = getpwuid(uid)
-    elif user.matchNameRegex:
+    if user.matchNameRegex:
       ptrPasswd = getpwnam(user)
     else:
       exceptPOSIX("Invalid username provided.")
