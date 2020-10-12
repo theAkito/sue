@@ -121,6 +121,7 @@ All [`gosu` test cases](https://github.com/tianon/gosu/blob/master/Dockerfile.te
 * ~~Include `gosu` test cases~~
 * ~~Better error handling~~
 * Add base Docker image
+* Add CI
 * Separate inlined script from Dockerfile
 * Optimize
 

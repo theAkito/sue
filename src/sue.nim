@@ -84,11 +84,13 @@ proc getPasswdOrExcept(user: string) =
 
 
 if usergroup.contains(":"):
+  ## If group was specified on CLI.
   let splitusergroup = usergroup.split(':')
   user  = splitusergroup[0]
   group = splitusergroup[1]
   getPasswdOrExcept(user)
 else:
+  ## If group was not specified on CLI.
   getPasswdOrExcept(usergroup)
 
 if not ptrPasswd.isNil:
@@ -96,6 +98,7 @@ if not ptrPasswd.isNil:
   gid = ptrPasswd.pw_gid
   setHomeDir($ptrPasswd.pw_dir)
 else:
+  ## If a non-instantiated UID was provided.
   setHomeDir("/")
 
 if group != "":
@@ -121,10 +124,11 @@ if group != "":
 singleGidArray[0] = gid
 if ptrPasswd.isNil:
   if setgroups(1, singleGidArray.addr) < 0:
-    ## Error out, if group is either not provided or not retrievable.
     exceptPOSIX("Cannot set single provided group.")
 elif not ptrPasswd.isNil:
   ## If `group` wasn't specified, it will be researched.
+  ## This will also be skipped when a non-instantiated
+  ## UID was provided.
   groupamount = 0
   while true:
     ## Retrieving amount of matching groups, until we retrieved all.
@@ -138,7 +142,7 @@ elif not ptrPasswd.isNil:
         exceptPOSIX("Cannot set array of discovered groups.")
       break
 
-## Usually, `setgid`/`setuid` do not work, if not executed as root.
+## Usually, `setgid` and `setuid` do not work, if not executed as root.
 ## Therefore, reminding the user to avoid the most common mistake.
 if setgid(gid) < 0: exceptPOSIX("""Error occured with proc "setgid". Did you run me as the "root" user?""")
 if setuid(uid) < 0: exceptPOSIX("""Error occured with proc "setuid". Did you run me as the "root" user?""")
