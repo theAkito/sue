@@ -6,7 +6,8 @@ FROM nimlang/nim:1.2.6-alpine as build
 RUN apk add --no-cache git
 RUN git clone https://github.com/theAkito/sue.git /root/sue
 WORKDIR /root/sue
-RUN echo y | nimble install regex
+RUN nimble check
+RUN nimble --accept install --depsOnly
 RUN nimble fbuild
 
 FROM alpine:3.12
@@ -14,10 +15,10 @@ FROM alpine:3.12
 RUN cut -d: -f1 /etc/group | xargs -n1 addgroup nobody
 COPY --from=build /root/sue/sue /usr/local/bin/sue
 
-ENV LOCAL_BUILD=true
 ENV SUE=/usr/local/bin/sue
 
 # For local testing, overwriting the previously built binary.
+ENV LOCAL_BUILD=true
 COPY sue /opt
 RUN { [ $LOCAL_BUILD = true ] && \
     apk add --no-cache libc6-compat && \
