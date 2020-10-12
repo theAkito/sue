@@ -132,7 +132,7 @@ elif not ptrPasswd.isNil:
     try:
       matchedgroups = getgrouplist(ptrPasswd.pw_name, gid, gidArray.addr, groupamount.addr)
     except:
-      exceptPOSIX("""Error occured with proc "getgrouplist".""")
+      exceptPOSIX("Failed to get list of groups associated with provided.")
     if matchedgroups == groupamount:
       if setgroups(groupamount, gidArray.addr) < 0:
         exceptPOSIX("Cannot set array of discovered groups.")
