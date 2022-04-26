@@ -1,6 +1,9 @@
 [![nimble](https://raw.githubusercontent.com/yglukhov/nimble-tag/master/nimble.png)](https://nimble.directory/pkg/sue)
 
+[![Source](https://img.shields.io/badge/project-source-2a2f33?style=plastic)](https://github.com/theAkito/sue)
 [![Language](https://img.shields.io/badge/language-Nim-orange.svg?style=plastic)](https://nim-lang.org/)
+
+![Last Commit](https://img.shields.io/github/last-commit/theAkito/sue?style=plastic)
 
 [![GitHub](https://img.shields.io/badge/license-GPL--3.0-informational?style=plastic)](https://www.gnu.org/licenses/gpl-3.0.txt)
 [![Liberapay patrons](https://img.shields.io/liberapay/patrons/Akito?style=plastic)](https://liberapay.com/Akito/)
@@ -9,7 +12,7 @@
 Executes a program as a user different from the user running `sue`. The target program is `exec`'ed which means, that it replaces the `sue` process you are using to run the target program. This simulates native tools like `su` and `sudo` and uses the same low-level POSIX tools to achieve that, but eliminates common issues that usually arise, when using those native tools.
 
 ## Why
-Maintainable alternative to ncopa/su-exec, which is the better tianon/gosu. This one is far better (higher performance, smaller size), than the original gosu, however it is far easier to maintain, than su-exec, which is written in plain C.
+As small and swift as `su-exec`, but as featureful and robust as `gosu`!
 
 This and its alternatives all exist for pretty much the same core reason:
 
@@ -126,7 +129,7 @@ All [`gosu` test cases](https://github.com/tianon/gosu/blob/master/Dockerfile.te
 * Optimize
 
 ## License
-Copyright (C) 2020  Akito <the@akito.ooo>
+Copyright © 2020-2022  Akito <the@akito.ooo>
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
